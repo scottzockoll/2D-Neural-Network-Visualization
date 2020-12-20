@@ -1,0 +1,16 @@
+{
+  "name": "tfjs_nn_demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel index.html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tensorflow/tfjs": "^2.8.1",
+    "p5": "^1.1.9"
+  }
+}
