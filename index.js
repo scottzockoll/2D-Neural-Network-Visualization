@@ -26,7 +26,7 @@ function buildModel() {
         optimizer: optimizer,
         loss: tf.losses.sigmoidCrossEntropy,
         metrics: ['accuracy'],
-        
+
     });
     return model
 }

@@ -1,0 +1,6 @@
+.cache/
+.idea
+.xml
+dist/
+node_modules
+.idea/workspace.xml
