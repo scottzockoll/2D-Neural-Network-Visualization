@@ -9,6 +9,7 @@ export const twoDimNeuralNetwork = (canvas_size, model) => {
     let predictionMode = false
     let xs = []
     let ys = []
+    let dataGraphic
 
     function changeClass() {
         active_class = active_class === 1 ? 0 : 1
@@ -38,31 +39,34 @@ export const twoDimNeuralNetwork = (canvas_size, model) => {
             let [x, y] = getCartesianPoints(e.offsetX, e.offsetY)
             model.predict(tf.tensor2d([x, y], [1, 2])).print()
         } else {
-            drawPoint(s, e.offsetX, e.offsetY, active_class)
+            drawPoint(dataGraphic, e.offsetX, e.offsetY, active_class)
             let [x, y] = getCartesianPoints(e.offsetX, e.offsetY)
             xs.push([x, y])
             ys.push(active_class)
+            s.image(dataGraphic, 0, 0)
         }
     }
 
     // x and y are in canvas points
-    const drawPoint = (s, x, y, classNumber) => {
-        s.stroke(0)
+    // draws point onto graphic
+    const drawPoint = (graphic, x, y, classNumber) => {
+        graphic.stroke(0)
         let color
         if (classNumber === 1) {
             color = 'green'
         } else {
             color = 'red'
         }
-        s.fill(color)
-        s.circle(x, y, 10)
+        graphic.fill(color)
+        graphic.circle(x, y, 10)
     }
 
-    const drawLines = (s) => {
-        s.stroke(0)
-        s.fill(0, 250)
-        s.line(CANVAS_SIZE / 2, 0, CANVAS_SIZE / 2, CANVAS_SIZE)
-        s.line(0, CANVAS_SIZE / 2, CANVAS_SIZE, CANVAS_SIZE / 2)
+    // draw lines onto this graphic
+    const drawLines = (graphic) => {
+        graphic.stroke(0)
+        graphic.fill(0, 250)
+        graphic.line(CANVAS_SIZE / 2, 0, CANVAS_SIZE / 2, CANVAS_SIZE)
+        graphic.line(0, CANVAS_SIZE / 2, CANVAS_SIZE, CANVAS_SIZE / 2)
     }
 
     const drawDataset = (s) => {
@@ -87,7 +91,7 @@ export const twoDimNeuralNetwork = (canvas_size, model) => {
 
     const drawRegions = (s) => {
 
-        let [sequence, difference] = getArithmeticSequence(10)
+        let [sequence, difference] = getArithmeticSequence(7)
 
         let cartesianMesh = []
         let canvasMesh = []
@@ -107,13 +111,16 @@ export const twoDimNeuralNetwork = (canvas_size, model) => {
             for (let i = 0; i < predictions.length; i += 1) {
                 let prediction = predictions[i].indexOf(Math.max(...predictions[i]))
                 let [x, y] = canvasMesh[i]
+                s.noStroke()
+                s.fill(BACKGROUND_COLOR, 250)
+                s.rect(x, y, difference, difference)
                 if (prediction === 1) {
                     s.fill(0, 250, 0, 100)
                 } else {
                     s.fill(250, 0, 0, 100)
                 }
-                s.noStroke()
                 s.rect(x, y, difference, difference)
+                s.image(dataGraphic, 0, 0)
             }
         })
 
@@ -123,10 +130,22 @@ export const twoDimNeuralNetwork = (canvas_size, model) => {
         s.trainButton.attribute('disabled', 'true')
         model.fit(tf.tensor2d(xs, [xs.length, 2]), tf.oneHot(ys, 2), {
             epochs: epochs,
+            callbacks: {
+                onEpochEnd: (epoch) => {
+                    console.log(epoch)
+                    drawRegions(s)
+                    // if (epoch % 5 === 0) {
+                    //     console.log(epoch)
+                    //     // clearRegions(s)
+                    //     drawRegions(s)
+                    // }
+
+                }
+            }
         }).then(() => {
             console.log('Model trained')
-            clearRegions(s)
-            drawRegions(s)
+            // clearRegions(s)
+            // drawRegions(s)
             s.trainButton.removeAttribute('disabled')
         });
 
@@ -142,14 +161,16 @@ export const twoDimNeuralNetwork = (canvas_size, model) => {
             canvas.mouseClicked((e) => mouseClicked(s, e))
 
             // draw graphics
-            s.background(BACKGROUND_COLOR)
-            drawLines(s)
+            dataGraphic = s.createGraphics(CANVAS_SIZE, CANVAS_SIZE)
+            dataGraphic.background(0, 0)
+            drawLines(dataGraphic)
+            s.image(dataGraphic, 0, 0)
 
             // define buttons
             let changeClassButton = s.createButton('Change class');
             changeClassButton.mousePressed(() => changeClass())
             s.trainButton = s.createButton('Train');
-            s.trainButton.mousePressed(() => train(s,300))
+            s.trainButton.mousePressed(() => train(s, 300))
 
         };
 
