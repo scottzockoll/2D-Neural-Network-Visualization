@@ -10,6 +10,13 @@ export const twoDimNeuralNetwork = (canvas_size, model) => {
     let xs = []
     let ys = []
     let dataGraphic
+    let hasDrawnRegions = false
+    let cartesianMesh
+    let canvasMesh
+    let sequence
+    let difference
+    let region
+    let regionStrokes
 
     function changeClass() {
         active_class = active_class === 1 ? 0 : 1
@@ -91,17 +98,25 @@ export const twoDimNeuralNetwork = (canvas_size, model) => {
 
     const drawRegions = (s) => {
 
-        let [sequence, difference] = getArithmeticSequence(7)
-
-        let cartesianMesh = []
-        let canvasMesh = []
-        sequence.forEach((y_component) => {
-            sequence.forEach((x_component) => {
-                let [x, y] = getCartesianPoints(x_component, y_component)
-                cartesianMesh.push([x, y])
-                canvasMesh.push([x_component, y_component])
+        if (!hasDrawnRegions) {
+            console.log('computing region info')
+            hasDrawnRegions = true;
+            [sequence, difference] = getArithmeticSequence(10)
+            cartesianMesh = []
+            canvasMesh = []
+            region = []
+            regionStrokes = []
+            sequence.forEach((y_component) => {
+                sequence.forEach((x_component) => {
+                    let [x, y] = getCartesianPoints(x_component, y_component)
+                    cartesianMesh.push([x, y])
+                    canvasMesh.push([x_component, y_component])
+                    region.push(2)
+                    regionStrokes.push(0)
+                })
             })
-        })
+
+        }
 
         let predictions
         model.predict(tf.tensor2d(cartesianMesh, [cartesianMesh.length, 2])).array().then((arrayFromPromise) => {
@@ -110,17 +125,39 @@ export const twoDimNeuralNetwork = (canvas_size, model) => {
 
             for (let i = 0; i < predictions.length; i += 1) {
                 let prediction = predictions[i].indexOf(Math.max(...predictions[i]))
-                let [x, y] = canvasMesh[i]
-                s.noStroke()
-                s.fill(BACKGROUND_COLOR, 250)
-                s.rect(x, y, difference, difference)
-                if (prediction === 1) {
-                    s.fill(0, 250, 0, 100)
-                } else {
-                    s.fill(250, 0, 0, 100)
+                if (prediction !== region[i]) {
+                    let [x, y] = canvasMesh[i]
+                    s.noStroke()
+                    s.fill(BACKGROUND_COLOR, 250)
+                    s.rect(x, y, difference, difference)
+                    if (prediction === 1) {
+                        s.fill(0, 250, 0, 100)
+                        region[i] = 1
+                    } else {
+                        s.fill(250, 0, 0, 100)
+                        region[i] = 0
+                    }
+                    // s.stroke(0)
+                    // regionStrokes[i] = 1
+                    s.rect(x, y, difference, difference)
+                    s.image(dataGraphic, 0, 0)
                 }
-                s.rect(x, y, difference, difference)
-                s.image(dataGraphic, 0, 0)
+                // else if (regionStrokes[i] === 1) {
+                //     regionStrokes[i] = 0
+                //     let [x, y] = canvasMesh[i]
+                //     s.noStroke()
+                //     s.fill(BACKGROUND_COLOR, 250)
+                //     s.rect(x, y, difference, difference)
+                //     let prediction = predictions[i].indexOf(Math.max(...predictions[i]))
+                //     if (prediction === 1) {
+                //         s.fill(0, 250, 0, 100)
+                //     } else {
+                //         s.fill(250, 0, 0, 100)
+                //     }
+                //     s.noStroke()
+                //     s.rect(x, y, difference, difference)
+                //     s.image(dataGraphic, 0, 0)
+                // }
             }
         })
 
@@ -132,13 +169,13 @@ export const twoDimNeuralNetwork = (canvas_size, model) => {
             epochs: epochs,
             callbacks: {
                 onEpochEnd: (epoch) => {
-                    console.log(epoch)
-                    drawRegions(s)
-                    // if (epoch % 5 === 0) {
-                    //     console.log(epoch)
-                    //     // clearRegions(s)
-                    //     drawRegions(s)
-                    // }
+                    // console.log(epoch)
+                    // drawRegions(s)
+                    if (epoch % 3 === 0) {
+                        console.log(epoch)
+                        // clearRegions(s)
+                        drawRegions(s)
+                    }
 
                 }
             }
