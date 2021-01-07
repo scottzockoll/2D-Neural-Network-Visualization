@@ -105,14 +105,14 @@ export const twoDimNeuralNetwork = (canvas_size, model) => {
             cartesianMesh = []
             canvasMesh = []
             region = []
-            regionStrokes = []
+            // regionStrokes = []
             sequence.forEach((y_component) => {
                 sequence.forEach((x_component) => {
                     let [x, y] = getCartesianPoints(x_component, y_component)
                     cartesianMesh.push([x, y])
                     canvasMesh.push([x_component, y_component])
                     region.push(2)
-                    regionStrokes.push(0)
+                    // regionStrokes.push(0)
                 })
             })
 
@@ -170,19 +170,19 @@ export const twoDimNeuralNetwork = (canvas_size, model) => {
             callbacks: {
                 onEpochEnd: (epoch) => {
                     // console.log(epoch)
-                    // drawRegions(s)
-                    if (epoch % 3 === 0) {
-                        console.log(epoch)
+                    drawRegions(s)
+                    // if (epoch % 3 === 0) {
+                    //     console.log(epoch)
                         // clearRegions(s)
-                        drawRegions(s)
-                    }
+                        // drawRegions(s)
+                    // }
 
                 }
             }
         }).then(() => {
             console.log('Model trained')
-            // clearRegions(s)
-            // drawRegions(s)
+            clearRegions(s)
+            drawRegions(s)
             s.trainButton.removeAttribute('disabled')
         });
 
